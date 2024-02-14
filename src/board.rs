@@ -1,6 +1,6 @@
 use std::fmt;
 
-const SIZE: usize = 3;
+pub const SIZE: usize = 3;
 
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Piece {X, O, Empty}
@@ -28,12 +28,13 @@ impl fmt::Display for Piece {
 pub enum PlaceError {
     InvalidCoords,
     Occupied,
+    NotOccupied,
     Bad,
 }
 
 pub struct Board {
-    board: [[Piece; SIZE]; SIZE],
-    turn: Piece,
+    pub board: [[Piece; SIZE]; SIZE],
+    pub turn: Piece,
 }
 
 impl Default for Board {
@@ -75,6 +76,25 @@ impl Board {
         };
 
         Ok(()) 
+    }
+
+    pub fn undo_move(&mut self, x: usize, y: usize) -> std::result::Result<(), PlaceError> {
+        if x >= SIZE || y >= SIZE {
+            return Err(PlaceError::InvalidCoords);
+        }
+
+        match self.board[x][y] {
+            Piece::Empty => Err(PlaceError::NotOccupied),
+            _ => Ok(()),
+        }?;
+
+        self.board[x][y] = Piece::Empty;
+        self.turn = match self.turn {
+            Piece::X => Piece::O,
+            Piece::O => Piece::X,
+            Piece::Empty => return Err(PlaceError::Bad),
+        };
+        Ok(())
     }
 
     fn check_horizontal(&self, row: usize) -> Win {
@@ -124,19 +144,17 @@ impl Board {
         let mut o_win_l = true;
         let mut o_win_r = true;
         for i in 0..SIZE {
-            for j in 0..SIZE {
-                if self.board[i][j] != Piece::X {
-                    x_win_l = false;
-                }
-                if self.board[i][j] != Piece::O {
-                    o_win_l = false;
-                }
-                if self.board[(SIZE - 1) - i][(SIZE - 1) - j] != Piece::X {
-                    x_win_r = false;
-                }
-                if self.board[(SIZE - 1) - i][(SIZE - 1) - j] != Piece::O {
-                    o_win_r = false;
-                }
+            if self.board[i][i] != Piece::X {
+                x_win_l = false;
+            }
+            if self.board[i][i] != Piece::O {
+                o_win_l = false;
+            }
+            if self.board[(SIZE - 1) - i][i] != Piece::X {
+                x_win_r = false;
+            }
+            if self.board[(SIZE - 1) - i][i] != Piece::O {
+                o_win_r = false;
             }
         }
 
@@ -145,7 +163,7 @@ impl Board {
         } else if o_win_l == true || o_win_r == true {
             return Win::O
         } else {
-            return Win::O
+            return Win::No
         }
     }
 

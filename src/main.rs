@@ -1,12 +1,13 @@
 use std::io;
-mod board;
-mod minmax;
+pub mod board;
+mod negamax;
 
 fn main() {
     let mut b: board::Board = board::Board::default();
 
     loop {
         b.print();
+        println!("{:?}", negamax::negamax(&mut b, 10));
         match b.check_win() {
             board::Win::X => {
                 println!("X is the winner!");
