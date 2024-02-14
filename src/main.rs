@@ -1,5 +1,6 @@
 use std::io;
 mod board;
+mod minmax;
 
 fn main() {
     let mut b: board::Board = board::Board::default();
@@ -7,14 +8,18 @@ fn main() {
     loop {
         b.print();
         match b.check_win() {
-            board::Piece::X => {
+            board::Win::X => {
                 println!("X is the winner!");
                 break;
             },
-            board::Piece::O => {
+            board::Win::O => {
                 println!("O is the winner!");
                 break;
             },
+            board::Win::Tie => {
+                println!("The game is a tie! How exciting!");
+                break;
+            }
             _ => {},
         }
 

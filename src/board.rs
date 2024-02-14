@@ -5,6 +5,9 @@ const SIZE: usize = 3;
 #[derive(Debug, PartialEq, Eq, Clone, Copy)]
 pub enum Piece {X, O, Empty}
 
+#[derive(PartialEq, Eq)]
+pub enum Win {X, O, No, Tie}
+
 impl Default for Piece {
     fn default() -> Self {
         Piece::Empty
@@ -42,6 +45,18 @@ impl Default for Board {
     }
 }
 
+impl Clone for Board {
+    fn clone(&self) -> Self {
+        let mut ans_board = [[Piece::Empty; SIZE]; SIZE];
+        for i in 0..SIZE {
+            for j in 0..SIZE {
+                ans_board[i][j] = self.board[i][j].clone();
+            }
+        }
+        return Self{board: ans_board, turn: self.turn};
+    }
+}
+
 impl Board {
     pub fn make_move(&mut self, x: usize, y: usize) -> std::result::Result<(), PlaceError> {
         if x >= SIZE || y >= SIZE {
@@ -62,7 +77,7 @@ impl Board {
         Ok(()) 
     }
 
-    fn check_horizontal(&self, row: usize) -> Piece {
+    fn check_horizontal(&self, row: usize) -> Win {
         let mut x_win = true;
         let mut o_win = true;
         for &cell in &self.board[row] {
@@ -74,15 +89,15 @@ impl Board {
             }
         }
         if x_win {
-            Piece::X
+            Win::X
         } else if o_win {
-            Piece::O
+            Win::O
         } else {
-            Piece::Empty
+            Win::No
         }
     }
 
-    fn check_vertical(&self, col:usize) -> Piece {
+    fn check_vertical(&self, col:usize) -> Win {
         let mut x_win = true;
         let mut o_win = true;
         for i in 0..SIZE {
@@ -95,15 +110,15 @@ impl Board {
             }
         }
         if x_win {
-            Piece::X
+            Win::X
         } else if o_win {
-            Piece::O
+            Win::O
         } else {
-            Piece::Empty
+            Win::No
         }
     }
 
-    fn check_diagonals(&self) -> Piece {
+    fn check_diagonals(&self) -> Win {
         let mut x_win_l = true;
         let mut x_win_r = true;
         let mut o_win_l = true;
@@ -126,22 +141,36 @@ impl Board {
         }
 
         if x_win_l == true || x_win_r == true {
-            return Piece::X
+            return Win::X
         } else if o_win_l == true || o_win_r == true {
-            return Piece::O
+            return Win::O
         } else {
-            return Piece::Empty
+            return Win::O
         }
     }
 
-    pub fn check_win(&self) -> Piece {
+    fn check_tie(&self) -> Win {
+        for i in 0..SIZE {
+            for j in 0..SIZE {
+                if self.board[i][j] == Piece::Empty {
+                    return Win::No;
+                }
+            }
+        }
+        return Win::Tie;
+    }
+
+    pub fn check_win(&self) -> Win {
+        if self.check_tie() == Win::Tie {
+            return Win::Tie;
+        }
         for i in 0..SIZE {
             match self.check_horizontal(i) {
-                Piece::Empty => {},
+                Win::No => {},
                 result => return result,
             }
             match self.check_vertical(i) {
-                Piece::Empty => {},
+                Win::No => {},
                 result => return result,
             }
         }
